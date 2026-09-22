@@ -102,6 +102,8 @@
     <span id="cnt">显示 …</span>
     <span>·　数据来源：官方公开名单 + 提交方公开规范；摘录与分类供内部参考，以原始材料为准</span>
     <span>·　按 <b>/</b> 聚焦搜索，<b>Esc</b> 清空；点行看详情</span>
+    <span></span>
+    <span style="color:#6d7a96">数据版本 <b id="ver">—</b></span>
   </div>
   <div class="fambar" id="famBar"></div>
   <div class="legend" id="famLegend"></div>
@@ -198,6 +200,7 @@ function render(){
   $("#f1").textContent=`显示 ${view.length} / ${DATA.algorithms.length} 个候选 · 生成于 ${DATA.generated}`;
   const famDist=(DATA.family_order||[]).map(k=>`${k} ${(DATA.counts&&DATA.counts.by_family&&DATA.counts.by_family[k])||0}`).join(" · ");
   $("#sub").textContent=`${DATA.source}　|　共 ${DATA.algorithms.length} 个候选　|　有 128 位参数 ${DATA.algorithms.filter(a=>nums(a).sum!==null).length} 个`+(famDist?`　|　家族分布：${famDist}`:"");
+  const _v=document.getElementById("ver"); if(_v) _v.textContent=DATA.generated||"—";
   const _c=document.getElementById("cnt");
   if(_c) _c.textContent=`显示 ${view.length} / ${DATA.algorithms.length} 条`;
   buildFamBar();
