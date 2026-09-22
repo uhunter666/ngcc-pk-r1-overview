@@ -59,6 +59,22 @@
   footer{position:fixed;bottom:0;left:0;right:0;background:#0c111b;border-top:1px solid var(--line);
          color:#6d7a96;font-size:11.5px;padding:5px 16px;display:flex;justify-content:space-between}
   @media(max-width:900px){main{display:block;height:auto}.tablewrap{max-height:46vh}aside{border-left:none;border-top:1px solid var(--line);max-height:none}}
+  .hint{font-size:12px;color:#8b98b8;margin-top:8px;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  .hint b{color:var(--fg)}
+  .fambar{display:flex;height:10px;border-radius:5px;overflow:hidden;margin-top:8px;border:1px solid var(--line)}
+  .fambar span{display:block;min-width:2px}
+  .legend{font-size:11.5px;color:#8b98b8;margin-top:6px;display:flex;gap:12px;flex-wrap:wrap}
+  .legend i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:5px;vertical-align:middle}
+  .btn{cursor:pointer;background:#1b2740;border:1px solid var(--line);color:var(--fg);border-radius:6px;
+       padding:4px 10px;font-size:12px;user-select:none}
+  .btn:hover{border-color:var(--acc)}
+  @media print{
+    header .bar,.hint,.fambar,.legend,footer,aside{display:none!important}
+    body{background:#fff;color:#000}
+    main{display:block;height:auto}
+    .tablewrap{max-height:none;overflow:visible}
+    table,th,td{color:#000;border-color:#bbb}
+  }
 </style>
 </head>
 <body>
@@ -82,6 +98,13 @@
     <span style="width:12px"></span>
     <span class="chip" id="paramsOnly">仅看有参数</span>
   </div>
+  <div class="hint">
+    <span id="cnt">显示 …</span>
+    <span>·　数据来源：官方公开名单 + 提交方公开规范；摘录与分类供内部参考，以原始材料为准</span>
+    <span>·　按 <b>/</b> 聚焦搜索，<b>Esc</b> 清空；点行看详情</span>
+  </div>
+  <div class="fambar" id="famBar"></div>
+  <div class="legend" id="famLegend"></div>
 </header>
 
 <main>
@@ -175,6 +198,9 @@ function render(){
   $("#f1").textContent=`显示 ${view.length} / ${DATA.algorithms.length} 个候选 · 生成于 ${DATA.generated}`;
   const famDist=(DATA.family_order||[]).map(k=>`${k} ${(DATA.counts&&DATA.counts.by_family&&DATA.counts.by_family[k])||0}`).join(" · ");
   $("#sub").textContent=`${DATA.source}　|　共 ${DATA.algorithms.length} 个候选　|　有 128 位参数 ${DATA.algorithms.filter(a=>nums(a).sum!==null).length} 个`+(famDist?`　|　家族分布：${famDist}`:"");
+  const _c=document.getElementById("cnt");
+  if(_c) _c.textContent=`显示 ${view.length} / ${DATA.algorithms.length} 条`;
+  buildFamBar();
 }
 
 function detail(){
@@ -198,8 +224,44 @@ function detail(){
     ${src?`<div class="note">参数来源：${src}</div>`:""}
     <div class="track">长期跟踪：首次收录 ${a.first_seen||"—"}　·　最近核查 —　·　变更记录 0 条<br>
       （后续版本、安全性估计、攻击进展、实现结果都会记在这里）</div>
-    <div class="kv" style="color:#6d7a96;font-size:11.5px">规范文本：${a.spec_file||"—"}${a.spec_chars?"（"+a.spec_chars+" 字符）":""}</div>`;
+    <div class="kv" style="color:#6d7a96;font-size:11.5px">规范文本：${a.spec_file||"—"}${a.spec_chars?"（"+a.spec_chars+" 字符）":""}</div>
+    <div style="margin-top:10px"><span class="btn" id="copyBtn" onclick="copyDetail()">复制摘要</span>
+      <span class="btn" onclick="window.print()">打印本页</span></div>`;
 }
+
+const FAMCOL={"格密码":"#4472c4","编码类":"#92d050","哈希类":"#ffc000","MPC-in-the-Head":"#a35bd6",
+              "多变量":"#e06666","同源类":"#00b0a0","其他":"#8a8f98"};
+function buildFamBar(){
+  const el=document.getElementById("famBar");
+  if(!el||el.dataset.done||!DATA.counts||!DATA.counts.by_family) return;
+  const bf=DATA.counts.by_family;
+  el.innerHTML=Object.entries(bf).map(([k,v])=>`<span style="flex:${v};background:${FAMCOL[k]||"#666"}" title="${k}：${v}"></span>`).join("");
+  const lg=document.getElementById("famLegend");
+  if(lg) lg.innerHTML=Object.entries(bf).map(([k,v])=>`<span><i style="background:${FAMCOL[k]||"#666"}"></i>${k} ${v}</span>`).join("");
+  el.dataset.done="1";
+}
+function copyDetail(){
+  const a=sel; if(!a) return;
+  const L=a.level1||{};
+  const z=v=>(v===null||v===undefined)?"—":v;
+  const t=[`${a.name}（${a.catLabel} / ${famOf(a)}）`,
+    `家族：${a.family||"—"}`,
+    `安全假设：${a.assumption||"—"}`,
+    a.summary?`摘要：${a.summary}`:"",
+    (a.points&&a.points.length)?`关键点：\n- ${a.points.join("\n- ")}`:"",
+    `128 位参数集：${L.label||"—"}`,
+    `尺寸（B）：公钥 ${z(a.level1&&a.level1.pk)} / ${a.cat==="sig"?"签名":"密文"} ${z(a.cat==="sig"?(a.level1&&a.level1.sig):(a.level1&&a.level1.ct))} / 私钥 ${z(a.level1&&a.level1.sk)}`,
+    `来源：官方公开名单与提交方公开规范（仅供内部参考）`
+  ].filter(Boolean).join("\n");
+  const done=()=>{const b=document.getElementById("copyBtn"); if(b){b.textContent="已复制 ✓"; setTimeout(()=>b.textContent="复制摘要",1200);} };
+  if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(t).then(done,c=>{prompt("复制以下内容：",t);}); }
+  else prompt("复制以下内容：",t);
+}
+document.addEventListener("keydown",e=>{
+  const q=document.getElementById("q");
+  if(e.key==="/"&&document.activeElement!==q){e.preventDefault();q.focus();}
+  if(e.key==="Escape"&&document.activeElement===q){q.value="";q.dispatchEvent(new Event("input"));}
+});
 
 document.querySelectorAll(".chip[data-f]").forEach(c=>c.onclick=()=>{
   const f=c.dataset.f, v=c.dataset.v;
