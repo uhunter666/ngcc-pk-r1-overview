@@ -185,7 +185,7 @@ function render(){
     const tr=document.createElement("tr");
     if(sel&&sel.id===a.id) tr.className="sel";
     tr.innerHTML=`<td>${a.name.length>34?a.name.slice(0,33)+"…":a.name}
-        ${a.text_available?"":'<span class="miss" title="规范为扫描件，无文字层">扫描件</span>'}</td>
+        ${a.text_available?"":'<span class="miss" title="规范正文未包含在提取范围内">无正文</span>'}</td>
       <td><span class="pill ${a.cat}">${a.catLabel.replace("密钥封装（KEM）","KEM").replace("密钥交换（KEX）","KEX").replace("数字签名","签名")}</span></td>
       <td class="fam">${famOf(a)}</td>
       <td class="num">${fmt(n.pk)}</td><td class="num">${fmt(n.sk)}</td>
