@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>后量子算法跟踪台 · NICCS 第一轮候选</title>
+<style>
+  :root{
+    --bg:#0f1420; --panel:#161d2c; --panel2:#1b2436; --line:#26304a;
+    --fg:#e8ecf6; --dim:#93a0bb; --acc:#5b8dff; --sig:#4472C4; --kem:#92D050;
+    --warn:#ffb347; --ok:#4fd18b;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--fg);
+       font-family:"Noto Sans CJK SC","Noto Sans CJK JP","PingFang SC","Microsoft YaHei",system-ui,sans-serif;}
+  header{position:sticky;top:0;z-index:5;background:linear-gradient(180deg,#121a29,#0f1420);
+         border-bottom:1px solid var(--line);padding:14px 20px 10px}
+  h1{margin:0 0 4px;font-size:19px;letter-spacing:.3px}
+  .sub{color:var(--dim);font-size:12.5px}
+  .bar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:10px}
+  input[type=search]{background:var(--panel);border:1px solid var(--line);color:var(--fg);
+        padding:7px 11px;border-radius:8px;font-size:13px;min-width:230px;outline:none}
+  input[type=search]:focus{border-color:var(--acc)}
+  .chip{background:var(--panel);border:1px solid var(--line);color:var(--dim);border-radius:999px;
+        padding:5px 12px;font-size:12.5px;cursor:pointer;user-select:none}
+  .chip:hover{border-color:var(--acc);color:var(--fg)}
+  .chip.on{background:#1d2a4a;border-color:var(--acc);color:#cfe0ff}
+  main{display:grid;grid-template-columns:minmax(0,1fr) 420px;gap:0;height:calc(100vh - 108px)}
+  .tablewrap{overflow:auto;padding:12px 8px 40px 16px}
+  table{border-collapse:collapse;width:100%;font-size:13px}
+  th,td{padding:7px 9px;border-bottom:1px solid #1e2740;text-align:left;white-space:nowrap}
+  th{position:sticky;top:0;background:#141b2a;color:var(--dim);font-weight:600;cursor:pointer;font-size:12px}
+  th:hover{color:var(--fg)}
+  tbody tr{cursor:pointer}
+  tbody tr:hover{background:#182137}
+  tbody tr.sel{background:#1d2a4a}
+  td.num{text-align:right;font-variant-numeric:tabular-nums}
+  .pill{display:inline-block;padding:1px 7px;border-radius:999px;font-size:11px;border:1px solid}
+  .pill.sig{color:#9dbcf5;border-color:#33507f}
+  .pill.kem{color:#b9e58c;border-color:#4a6b2c}
+  .pill.kex{color:#f0c98a;border-color:#7a5c2a}
+  .fam{color:var(--dim);font-size:12px}
+  .na{color:#4c5872}
+  .miss{color:var(--warn);font-size:11px}
+  aside{border-left:1px solid var(--line);background:var(--panel);overflow:auto;padding:16px 18px 50px}
+  aside h2{margin:2px 0 2px;font-size:16px}
+  aside .meta{color:var(--dim);font-size:12px;margin-bottom:12px}
+  .kv{margin:10px 0;font-size:13px;line-height:1.65}
+  .kv b{color:#b9c6e4;font-weight:600}
+  .sz{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0}
+  .sz div{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:8px 10px}
+  .sz span{display:block;color:var(--dim);font-size:11.5px}
+  .sz strong{font-size:16px;font-variant-numeric:tabular-nums}
+  .pts{margin:8px 0 0;padding-left:18px;font-size:12.5px;line-height:1.6;color:#cdd6ea}
+  .note{background:#141c2e;border:1px solid var(--line);border-left:3px solid var(--acc);
+        border-radius:6px;padding:8px 10px;font-size:12px;color:#a9b6d3;margin-top:10px;word-break:break-word}
+  .track{background:#131a29;border:1px dashed #2c3a58;border-radius:8px;
+         padding:9px 11px;font-size:12px;color:var(--dim);margin-top:12px}
+  footer{position:fixed;bottom:0;left:0;right:0;background:#0c111b;border-top:1px solid var(--line);
+         color:#6d7a96;font-size:11.5px;padding:5px 16px;display:flex;justify-content:space-between}
+  @media(max-width:900px){main{display:block;height:auto}.tablewrap{max-height:46vh}aside{border-left:none;border-top:1px solid var(--line);max-height:none}}
+</style>
+</head>
+<body>
+<header>
+  <h1>后量子算法跟踪台 <span class="sub">· NICCS 公钥算法第一轮候选</span></h1>
+  <div class="sub" id="sub">加载中…</div>
+  <div class="bar">
+    <input type="search" id="q" placeholder="搜索算法名 / 家族 / 假设关键词…" />
+    <span class="chip on" data-f="cat" data-v="">全部类别</span>
+    <span class="chip" data-f="cat" data-v="sig">签名</span>
+    <span class="chip" data-f="cat" data-v="kem">KEM</span>
+    <span class="chip" data-f="cat" data-v="kex">KEX</span>
+    <span style="width:12px"></span>
+    <span class="chip" data-f="fam" data-v="格密码">格密码</span>
+    <span class="chip" data-f="fam" data-v="编码类">编码类</span>
+    <span class="chip" data-f="fam" data-v="哈希类">哈希类</span>
+    <span class="chip" data-f="fam" data-v="MPC-in-the-Head">MPC-in-the-Head</span>
+    <span class="chip" data-f="fam" data-v="多变量">多变量</span>
+    <span class="chip" data-f="fam" data-v="同源类">同源类</span>
+    <span class="chip" data-f="fam" data-v="其他">其他</span>
+    <span style="width:12px"></span>
+    <span class="chip" id="paramsOnly">仅看有参数</span>
+  </div>
+</header>
+
+<main>
+  <div class="tablewrap">
+    <table id="tbl">
+      <thead><tr>
+        <th data-k="name">算法</th>
+        <th data-k="cat">类别</th>
+        <th data-k="family">家族</th>
+        <th data-k="pk" class="num">公钥 (B)</th>
+        <th data-k="sk" class="num">私钥 (B)</th>
+        <th data-k="sig" class="num">签名 (B)</th>
+        <th data-k="ct" class="num">密文 (B)</th>
+        <th data-k="sum" class="num">合计 (B)</th>
+      </tr></thead>
+      <tbody></tbody>
+    </table>
+  </div>
+  <aside id="detail"><h2>选择一个算法</h2><div class="meta">点左侧表格任意一行，这里会显示它的家族、假设、摘要与 128 位参数。</div></aside>
+</main>
+
+<footer>
+  <span id="f1"></span>
+  <span>数据来源：官方公开材料整理 · 本页仅含公开算法信息，不含任何个人信息</span>
+</footer>
+
+<script>
+let DATA=null, view=[], sel=null, sortK="name", sortAsc=true;
+const filter={cat:"", fam:""};
+let paramsOnly=false;
+
+const $=s=>document.querySelector(s);
+function famOf(a){
+  if(a.cls) return a.cls;
+  const f=(a.family||"")+" "+(a.assumption||"");
+  if(/格|LWE|SIS|NTRU|LWR|LIP|学习误差|模块|环-/.test(f)) return "格密码";
+  if(/编码|码|McEliece|综合征|Goppa|秩度量/.test(f)) return "编码类";
+  if(/MPC-?in-?the-?Head|MPCitH|TCitH|VOLE|in-the-head/i.test(f)) return "MPC-in-the-Head";
+  if(/哈希|Merkle|超树|无状态|SPHINCS/i.test(f)) return "哈希类";
+  if(/多变量|UOV|Oil|Vinegar|MQ/.test(f)) return "多变量";
+  if(/同源|超奇异|isogen/i.test(f)) return "同源类";
+  return "其他";
+}
+function nums(a){
+  const L=a.level1||{};
+  const pk=L.pk??null, sk=L.sk??null, sig=L.sig??null, ct=L.ct??null;
+  const sum=(pk||0)+((sig||ct)||0);
+  return {pk,sk,sig,ct,sum: (pk||sig||ct)?sum:null};
+}
+function fmt(v){ return (v===null||v===undefined)?'<span class="na">—</span>':v.toLocaleString(); }
+
+function render(){
+  const q=$("#q").value.trim().toLowerCase();
+  view=DATA.algorithms.filter(a=>{
+    if(filter.cat && a.cat!==filter.cat) return false;
+    if(filter.fam && famOf(a)!==filter.fam) return false;
+    const n=nums(a);
+    if(paramsOnly && n.sum===null) return false;
+    if(q){
+      const hay=(a.name+" "+(a.family||"")+" "+(a.assumption||"")+" "+(a.summary||"")).toLowerCase();
+      if(!hay.includes(q)) return false;
+    }
+    return true;
+  });
+  const dir=sortAsc?1:-1;
+  view.sort((x,y)=>{
+    const nx=nums(x), ny=nums(y);
+    let vx,vy;
+    if(["pk","sk","sig","ct","sum"].includes(sortK)){ vx=nx[sortK]; vy=ny[sortK];
+      if(vx===null)vx=dir>0?Infinity:-Infinity; if(vy===null)vy=dir>0?Infinity:-Infinity; }
+    else { vx=(sortK==="family"?famOf(x):x[sortK])||""; vy=(sortK==="family"?famOf(y):y[sortK])||""; }
+    if(typeof vx==="string") return vx.localeCompare(vy,"zh")*dir;
+    return (vx-vy)*dir;
+  });
+  const tb=$("#tbl tbody"); tb.innerHTML="";
+  for(const a of view){
+    const n=nums(a);
+    const tr=document.createElement("tr");
+    if(sel&&sel.id===a.id) tr.className="sel";
+    tr.innerHTML=`<td>${a.name.length>34?a.name.slice(0,33)+"…":a.name}
+        ${a.text_available?"":'<span class="miss" title="规范为扫描件，无文字层">扫描件</span>'}</td>
+      <td><span class="pill ${a.cat}">${a.catLabel.replace("密钥封装（KEM）","KEM").replace("密钥交换（KEX）","KEX").replace("数字签名","签名")}</span></td>
+      <td class="fam">${famOf(a)}</td>
+      <td class="num">${fmt(n.pk)}</td><td class="num">${fmt(n.sk)}</td>
+      <td class="num">${fmt(n.sig)}</td><td class="num">${fmt(n.ct)}</td>
+      <td class="num">${fmt(n.sum)}</td>`;
+    tr.onclick=()=>{ const same=sel&&sel.id===a.id; sel=a; render(); detail();
+      if(!same && window.innerWidth<=900){ const d=document.getElementById("detail"); d.scrollIntoView({behavior:"smooth",block:"start"}); } };
+    tb.appendChild(tr);
+  }
+  $("#f1").textContent=`显示 ${view.length} / ${DATA.algorithms.length} 个候选 · 生成于 ${DATA.generated}`;
+  const famDist=(DATA.family_order||[]).map(k=>`${k} ${(DATA.counts&&DATA.counts.by_family&&DATA.counts.by_family[k])||0}`).join(" · ");
+  $("#sub").textContent=`${DATA.source}　|　共 ${DATA.algorithms.length} 个候选　|　有 128 位参数 ${DATA.algorithms.filter(a=>nums(a).sum!==null).length} 个`+(famDist?`　|　家族分布：${famDist}`:"");
+}
+
+function detail(){
+  const a=sel; if(!a) return;
+  const n=nums(a), L=a.level1||{};
+  const src=(L.source||"").replace(/^/,"");
+  $("#detail").innerHTML=`
+    <h2>${a.name}</h2>
+    <div class="meta">${a.catLabel} · ${famOf(a)} · 状态：${a.status||"—"}</div>
+    <div class="sz">
+      <div><span>公钥</span><strong>${n.pk!==null?n.pk.toLocaleString():"—"}</strong></div>
+      <div><span>${a.cat==="sig"?"签名":"密文"}</span><strong>${(a.cat==="sig"?n.sig:n.ct)!==null?(a.cat==="sig"?n.sig:n.ct).toLocaleString():"—"}</strong></div>
+      <div><span>私钥</span><strong>${n.sk!==null?n.sk.toLocaleString():"—"}</strong></div>
+      <div><span>合计（公钥+${a.cat==="sig"?"签名":"密文"}）</span><strong>${n.sum!==null?n.sum.toLocaleString():"—"}</strong></div>
+    </div>
+    <div class="kv"><b>128 位参数集：</b>${L.label||"—"}</div>
+    <div class="kv"><b>家族：</b>${a.family||"—"}</div>
+    <div class="kv"><b>安全假设：</b>${a.assumption||"—"}</div>
+    ${a.summary?`<div class="kv"><b>摘要：</b>${a.summary}</div>`:""}
+    ${a.points&&a.points.length?`<div class="kv"><b>关键点：</b></div><ul class="pts">${a.points.map(p=>`<li>${p}</li>`).join("")}</ul>`:""}
+    ${src?`<div class="note">参数来源：${src}</div>`:""}
+    <div class="track">长期跟踪：首次收录 ${a.first_seen||"—"}　·　最近核查 —　·　变更记录 0 条<br>
+      （后续版本、安全性估计、攻击进展、实现结果都会记在这里）</div>
+    <div class="kv" style="color:#6d7a96;font-size:11.5px">规范文本：${a.spec_file||"—"}${a.spec_chars?"（"+a.spec_chars+" 字符）":""}</div>`;
+}
+
+document.querySelectorAll(".chip[data-f]").forEach(c=>c.onclick=()=>{
+  const f=c.dataset.f, v=c.dataset.v;
+  if(f==="cat"){
+    filter.cat=v;
+    document.querySelectorAll('.chip[data-f="cat"]').forEach(x=>x.classList.toggle("on",x===c));
+  } else {
+    filter.fam=(filter.fam===v)?"":v;
+    document.querySelectorAll('.chip[data-f="fam"]').forEach(x=>x.classList.toggle("on",x.dataset.v===filter.fam));
+  }
+  render();
+});
+$("#paramsOnly").onclick=e=>{ paramsOnly=!paramsOnly; e.target.classList.toggle("on",paramsOnly); render(); };
+$("#q").oninput=render;
+document.querySelectorAll("th").forEach(th=>th.onclick=()=>{
+  const k=th.dataset.k; if(!k) return;
+  if(sortK===k) sortAsc=!sortAsc; else { sortK=k; sortAsc=(k==="name"||k==="cat"||k==="family"); }
+  render();
+});
+fetch("data.json").then(r=>r.json()).then(d=>{ DATA=d; render(); });
+</script>
+</body>
+</html>
