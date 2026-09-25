@@ -68,6 +68,13 @@
   .btn{cursor:pointer;background:#1b2740;border:1px solid var(--line);color:var(--fg);border-radius:6px;
        padding:4px 10px;font-size:12px;user-select:none}
   .btn:hover{border-color:var(--acc)}
+  .rep{display:inline-block;margin-left:6px;padding:0 6px;border-radius:4px;font-size:10.5px;color:#a9b6d3;
+       border:1px solid #33405e;text-decoration:none;vertical-align:1px}
+  .rep:hover{border-color:var(--acc);color:var(--fg)}
+  .secrep{background:#141c2e;border:1px solid var(--line);border-radius:6px;padding:8px 10px;font-size:12.5px;
+          line-height:1.65;margin-top:10px}
+  .secrep a{color:#9dbcf5}
+  .secrep small{display:block;color:#6d7a96;font-size:11px}
   @media print{
     header .bar,.hint,.fambar,.legend,footer,aside{display:none!important}
     body{background:#fff;color:#000}
@@ -101,6 +108,7 @@
   <div class="hint">
     <span id="cnt">显示 …</span>
     <span>·　数据来源：官方公开名单 + 提交方公开规范；摘录与分类供内部参考，以原始材料为准</span>
+    <span>·　「报告 N」＝第三方站 ngcc.dev 公开报告条目数（仅索引，无条目 ≠ 安全）</span>
     <span>·　按 <b>/</b> 聚焦搜索，<b>Esc</b> 清空；点行看详情</span>
     <span></span>
     <span style="color:#6d7a96">数据版本 <b id="ver">—</b></span>
@@ -156,6 +164,12 @@ function nums(a){
   const sum=(pk||0)+((sig||ct)||0);
   return {pk,sk,sig,ct,sum: (pk||sig||ct)?sum:null};
 }
+function secRep(a){
+  const s=a.sec_reports; if(!s) return null;
+  const sc=[["design",s.design],["impl",s.implementation],["side-channel",s.side_channel]].filter(x=>x[1]).map(x=>x.join(" ")).join(" / ");
+  const st=[["Confirmed",s.confirmed],["Probable",s.probable],["Lead",s.lead],["Proof gap",s.proof_gap]].filter(x=>x[1]).map(x=>x.join(" ")).join(" · ");
+  return {s,sc,st};
+}
 function fmt(v){ return (v===null||v===undefined)?'<span class="na">—</span>':v.toLocaleString(); }
 
 function render(){
@@ -186,7 +200,8 @@ function render(){
     const n=nums(a);
     const tr=document.createElement("tr");
     if(sel&&sel.id===a.id) tr.className="sel";
-    tr.innerHTML=`<td>${a.name.length>34?a.name.slice(0,33)+"…":a.name}
+    const R=secRep(a);
+    tr.innerHTML=`<td>${a.name.length>34?a.name.slice(0,33)+"…":a.name}${R&&R.s.total?`<a class="rep" href="${R.s.url}" target="_blank" rel="noopener" title="ngcc.dev 公开报告 ${R.s.total} 条（${R.sc}）" onclick="event.stopPropagation()">报告 ${R.s.total}</a>`:""}
         </td>
       <td><span class="pill ${a.cat}">${a.catLabel.replace("密钥封装（KEM）","KEM").replace("密钥交换（KEX）","KEX").replace("数字签名","签名")}</span></td>
       <td class="fam">${famOf(a)}</td>
@@ -225,6 +240,10 @@ function detail(){
     ${a.summary?`<div class="kv"><b>摘要：</b>${a.summary}</div>`:""}
     ${a.points&&a.points.length?`<div class="kv"><b>关键点：</b></div><ul class="pts">${a.points.map(p=>`<li>${p}</li>`).join("")}</ul>`:""}
     ${src?`<div class="note">参数来源：${src}</div>`:""}
+    ${(R=>!R?"":`<div class="secrep"><b>公开报告索引（ngcc.dev）：</b>${R.s.total
+      ?`公开报告 ${R.s.total} 条（${R.sc}）<a href="${R.s.url}" target="_blank" rel="noopener">↗</a><br>证实度：${R.st}`
+      :`ngcc.dev 暂无该候选的报告条目 <a href="${R.s.url}" target="_blank" rel="noopener">↗</a>`}${R.s.withdrawn?`<br>另有已撤回条目 ${R.s.withdrawn} 条（不计入）`:""}
+      <small>报告编号 ${R.s.id}${R.s.issues.length?"："+R.s.issues.join(", "):""} · 仅为第三方公开报告的事实索引，详情与判断以原报告为准；无报告条目 ≠ 该项目安全${DATA.sec_reports_meta&&DATA.sec_reports_meta.site_updated?" · 索引截至 "+DATA.sec_reports_meta.site_updated:""}</small></div>`)(secRep(a))}
     <div class="track">长期跟踪：首次收录 ${a.first_seen||"—"}　·　最近核查 —　·　变更记录 0 条<br>
       （后续版本、安全性估计、攻击进展、实现结果都会记在这里）</div>
     <div class="kv" style="color:#6d7a96;font-size:11.5px">规范文本：${a.spec_file||"—"}${a.spec_chars?"（"+a.spec_chars+" 字符）":""}</div>
