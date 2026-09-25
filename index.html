@@ -237,7 +237,7 @@ function detail(){
     <div class="kv"><b>128 位参数集：</b>${L.label||"—"}</div>
     <div class="kv"><b>家族：</b>${a.family||"—"}</div>
     <div class="kv"><b>安全假设：</b>${a.assumption||"—"}</div>
-    ${a.submitters&&a.submitters.length?`<div class="kv"><b>提交者 / 单位：</b></div><ul class="pts">${a.submitters.map(s=>`<li>${s.name||"—"}${s.org?`　—　${s.org}`:""}</li>`).join("")}</ul>`:""}
+    ${(a.submitters&&((a.submitters.names||[]).length+(a.submitters.orgs||[]).length))?(((a.submitters.names||[]).length?`<div class="kv"><b>提交人：</b>${a.submitters.names.join("、")}</div>`:"")+((a.submitters.orgs||[]).length?`<div class="kv"><b>单位：</b>${a.submitters.orgs.join("、")}</div>`:"")):""}
     ${a.summary?`<div class="kv"><b>摘要：</b>${a.summary}</div>`:""}
     ${a.points&&a.points.length?`<div class="kv"><b>关键点：</b></div><ul class="pts">${a.points.map(p=>`<li>${p}</li>`).join("")}</ul>`:""}
     ${src?`<div class="note">参数来源：${src}</div>`:""}
