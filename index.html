@@ -245,6 +245,7 @@ function detail(){
       ?`公开报告 ${R.s.total} 条（${R.sc}）<a href="${R.s.url}" target="_blank" rel="noopener">↗</a><br>证实度：${R.st}`
       :`ngcc.dev 暂无该候选的报告条目 <a href="${R.s.url}" target="_blank" rel="noopener">↗</a>`}${R.s.withdrawn?`<br>另有已撤回条目 ${R.s.withdrawn} 条（不计入）`:""}
       <small>报告编号 ${R.s.id}${R.s.issues.length?"："+R.s.issues.join(", "):""} · 仅为第三方公开报告的事实索引，详情与判断以原报告为准；无报告条目 ≠ 该项目安全${DATA.sec_reports_meta&&DATA.sec_reports_meta.site_updated?" · 索引截至 "+DATA.sec_reports_meta.site_updated:""}</small></div>`)(secRep(a))}
+    ${a.forum_attacks&&a.forum_attacks.length?('<div class="secrep" style="border-left-color:var(--warn)"><b>论坛来源（非 ngcc.dev 索引）：</b>'+a.forum_attacks.map(f=>'<div style="margin-top:5px"><b>'+f.date+' · '+f.title+'</b>'+(f.source?'（'+f.source+'）':'')+'<br>'+f.summary+'<br><span style="color:#8b98b8">状态：'+f.status+'</span>'+(f.url?' <a href="'+f.url+'" target="_blank" rel="noopener">原文 ↗</a>':'')+'</div>').join('')+'<small>论坛报告与上方 ngcc.dev 公开报告索引为不同来源、分开列示；未经充分独立人工验证，不代表已证实</small></div>'):''}
     <div class="track">长期跟踪：首次收录 ${a.first_seen||"—"}　·　最近核查 —　·　变更记录 0 条<br>
       （后续版本、安全性估计、攻击进展、实现结果都会记在这里）</div>
     <div class="kv" style="color:#6d7a96;font-size:11.5px">规范文本：${a.spec_file||"—"}${a.spec_chars?"（"+a.spec_chars+" 字符）":""}</div>
