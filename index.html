@@ -166,7 +166,7 @@ function nums(a){
 }
 function secRep(a){
   const s=a.sec_reports; if(!s) return null;
-  const sc=[["design",s.design],["impl",s.implementation],["side-channel",s.side_channel]].filter(x=>x[1]).map(x=>x.join(" ")).join(" / ");
+  const sc=[["design",s.design],["impl",s.implementation],["side-channel",s.side_channel],["evaluation",s.evaluation]].filter(x=>x[1]).map(x=>x.join(" ")).join(" / ");
   const st=[["Confirmed",s.confirmed],["Probable",s.probable],["Lead",s.lead],["Proof gap",s.proof_gap]].filter(x=>x[1]).map(x=>x.join(" ")).join(" · ");
   return {s,sc,st};
 }
