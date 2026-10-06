@@ -71,6 +71,12 @@
   .rep{display:inline-block;margin-left:6px;padding:0 6px;border-radius:4px;font-size:10.5px;color:#a9b6d3;
        border:1px solid #33405e;text-decoration:none;vertical-align:1px}
   .rep:hover{border-color:var(--acc);color:var(--fg)}
+  .flag{display:inline-block;margin-left:6px;padding:0 6px;border-radius:4px;font-size:10.5px;
+        color:#ffd2d2;background:#4a1f1f;border:1px solid #a33838;vertical-align:1px;white-space:nowrap}
+  .flagbar{background:#2a1414;border:1px solid #7a2b2b;border-left:3px solid #e05555;border-radius:6px;
+        padding:8px 10px;font-size:12.5px;color:#ffcfcf;margin-top:10px;word-break:break-word;line-height:1.6}
+  .flagbar a{color:#ffb0b0}
+  .flagbar b{color:#ff9d9d}
   .secrep{background:#141c2e;border:1px solid var(--line);border-radius:6px;padding:8px 10px;font-size:12.5px;
           line-height:1.65;margin-top:10px}
   .secrep a{color:#9dbcf5}
@@ -201,7 +207,7 @@ function render(){
     const tr=document.createElement("tr");
     if(sel&&sel.id===a.id) tr.className="sel";
     const R=secRep(a);
-    tr.innerHTML=`<td>${a.name.length>34?a.name.slice(0,33)+"…":a.name}${R&&R.s.total?`<a class="rep" href="${R.s.url}" target="_blank" rel="noopener" title="ngcc.dev 公开报告 ${R.s.total} 条（${R.sc}）" onclick="event.stopPropagation()">报告 ${R.s.total}</a>`:""}
+    tr.innerHTML=`<td>${a.name.length>34?a.name.slice(0,33)+"…":a.name}${R&&R.s.total?`<a class="rep" href="${R.s.url}" target="_blank" rel="noopener" title="ngcc.dev 公开报告 ${R.s.total} 条（${R.sc}）" onclick="event.stopPropagation()">报告 ${R.s.total}</a>`:""}${a.flag?`<span class="flag" title="${(a.flag.note||a.flag.label).replace(/"/g,'&quot;')}">${a.flag.label}</span>`:""}
         </td>
       <td><span class="pill ${a.cat}">${a.catLabel.replace("密钥封装（KEM）","KEM").replace("密钥交换（KEX）","KEX").replace("数字签名","签名")}</span></td>
       <td class="fam">${famOf(a)}</td>
@@ -228,6 +234,7 @@ function detail(){
   $("#detail").innerHTML=`
     <h2>${a.name}</h2>
     <div class="meta">${a.catLabel} · ${famOf(a)} · 状态：${a.status||"—"}</div>
+    ${a.flag?`<div class="flagbar"><b>${a.flag.label}</b>${a.flag.note?"："+a.flag.note:""}${a.flag.source?` <a href="${a.flag.source}" target="_blank" rel="noopener">来源 ↗</a>`:""}</div>`:""}
     <div class="sz">
       <div><span>公钥</span><strong>${n.pk!==null?n.pk.toLocaleString():"—"}</strong></div>
       <div><span>${a.cat==="sig"?"签名":"密文"}</span><strong>${(a.cat==="sig"?n.sig:n.ct)!==null?(a.cat==="sig"?n.sig:n.ct).toLocaleString():"—"}</strong></div>
